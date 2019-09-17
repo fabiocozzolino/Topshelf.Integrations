@@ -1,7 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Quartz;
-using Quartz.Collection;
 using Quartz.Impl;
 using Quartz.Spi;
 using Topshelf.Logging;
@@ -9,27 +10,27 @@ using Topshelf.ServiceConfigurators;
 
 namespace Topshelf.Quartz
 {
-	public static class ScheduleJobServiceConfiguratorExtensions
+    public static class ScheduleJobServiceConfiguratorExtensions
 	{
-		private static readonly Func<IScheduler> DefaultSchedulerFactory = () =>
+		private static readonly Func<Task<IScheduler>> DefaultSchedulerFactory = () => 
 			                                                                   {
 				                                                                   var schedulerFactory = new StdSchedulerFactory();
 				                                                                   return schedulerFactory.GetScheduler();
 			                                                                   };
 
-		private static Func<IScheduler> _customSchedulerFactory;
+		private static Func<Task<IScheduler>> _customSchedulerFactory;
 		private static IScheduler Scheduler;
 		internal static IJobFactory JobFactory;
 
-		public static Func<IScheduler> SchedulerFactory
+		public static Func<Task<IScheduler>> SchedulerFactory
 		{
 			get { return _customSchedulerFactory ?? DefaultSchedulerFactory; }
 			set { _customSchedulerFactory = value; }
 		}
 
-		private static IScheduler GetScheduler()
+		private async static Task<IScheduler> GetScheduler()
 		{
-			var scheduler = SchedulerFactory();
+			var scheduler = await SchedulerFactory();
 			
 			if(JobFactory != null)
 				scheduler.JobFactory = JobFactory;
@@ -70,17 +71,17 @@ namespace Topshelf.Quartz
                 var jobListeners = jobConfig.JobListeners;
                 var triggerListeners = jobConfig.TriggerListeners;
                 var scheduleListeners = jobConfig.ScheduleListeners;
-				configurator.BeforeStartingService(() =>
+				configurator.BeforeStartingService(async () =>
 					                                   {
 														   log.Debug("[Topshelf.Quartz] Scheduler starting up...");
 														   if (Scheduler == null)
-															   Scheduler = GetScheduler();
+															   Scheduler = await GetScheduler();
 														   
 														   
 															if (Scheduler != null && jobDetail != null && jobTriggers.Any())
 															{
 																var triggersForJob = new HashSet<ITrigger>(jobTriggers);
-																Scheduler.ScheduleJob(jobDetail, triggersForJob, replaceJob);
+																await Scheduler.ScheduleJob(jobDetail, triggersForJob, replaceJob);
 																log.Info(string.Format("[Topshelf.Quartz] Scheduled Job: {0}", jobDetail.Key));
 					
 																foreach(var trigger in triggersForJob)
