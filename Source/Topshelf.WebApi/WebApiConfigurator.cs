@@ -1,7 +1,7 @@
+using Microsoft.Owin.Hosting;
 using System;
 using System.Web.Http;
 using System.Web.Http.Dependencies;
-using System.Web.Http.SelfHost;
 using Topshelf.Logging;
 
 namespace Topshelf.WebApi
@@ -71,7 +71,7 @@ namespace Topshelf.WebApi
 		    Server = ServerFactory != null ? ServerFactory(baseAddress) : BuildServer(baseAddress);
 		    var config = Server.Configuration;
 
-		    if(DependencyResolver != null)
+		    if (DependencyResolver != null)
 				config.DependencyResolver = DependencyResolver;
 
 			if (ServerConfigurer != null)
@@ -90,20 +90,20 @@ namespace Topshelf.WebApi
 		}
 
 	    private HttpServer BuildServer(Uri baseAddress)
-	    {
-	        return new HttpSelfHostServer(new HttpSelfHostConfiguration(baseAddress));
+	    {            
+	        return new HttpSelfHostServer(new HttpConfiguration(baseAddress));
 	    }
 
 	    public virtual void Initialize()
 	    {
-            if (Server is HttpSelfHostServer)
-                (Server as HttpSelfHostServer).OpenAsync().Wait();
+            if (Server is HttpServer)
+                (Server as HttpServer).OpenAsync().Wait();
 	    }
 
 	    public virtual void Shutdown()
 	    {
-            if (Server is HttpSelfHostServer)
-                (Server as HttpSelfHostServer).CloseAsync().Wait();
+            if (Server is HttpServer)
+                (Server as HttpServer).CloseAsync().Wait();
 	    }
 	}
 }

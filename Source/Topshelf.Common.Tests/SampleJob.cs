@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Quartz;
 
 namespace Topshelf.Common.Tests
@@ -13,10 +14,13 @@ namespace Topshelf.Common.Tests
             Dependency = new SampleDependency();
         }
 
-        public void Execute(IJobExecutionContext context)
+        public async Task Execute(IJobExecutionContext context)
         {
-            Dependency.DoWork();
-            HasRun = true;
+            await Task.Run(() =>
+            {
+                Dependency.DoWork();
+                HasRun = true;
+            });
         }
     }
 

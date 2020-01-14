@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Ninject;
 using Quartz;
 using Topshelf.Logging;
@@ -23,10 +24,11 @@ namespace Topshelf.Quartz.Ninject
 
 			IKernel kernel = NinjectBuilderConfigurator.Kernel;
 
+
 			if (kernel == null)
 				throw new Exception("You must call UseNinject() to use the Quartz Topshelf Ninject integration.");
 
-			Func<IScheduler> schedulerFactory = () => kernel.Get<IScheduler>();
+			Func<Task<IScheduler>> schedulerFactory = () => Task.Run(() => kernel.Get<IScheduler>());
 
 			ScheduleJobServiceConfiguratorExtensions.SchedulerFactory = schedulerFactory;
 
